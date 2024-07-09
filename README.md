@@ -20,12 +20,17 @@ and validated in a series of real pilots representing diverse educational and tr
 
 <br/>
 
+
 ## Table of contents
 
-- [Summary](#summary)
-- [How to run](#how-to-run)
+- [EU\_augMENTOR](#eu_augmentor)
+  - [Table of contents](#table-of-contents)
+  - [Summary](#summary)
+  - [How to run](#how-to-run)
     - [Use case: TryHackMe (THM)](#use-case-tryhackme-thm)
     - [Use case: MOODLE](#use-case-moodle)
+  - [Next steps](#next-steps)
+  - [Contact](#contact)
 
 ## Summary
 
