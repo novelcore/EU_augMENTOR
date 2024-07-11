@@ -17,15 +17,17 @@ moodle_settings = {
     "host": "...",
     "user": "...",
     "password": "...",
-    "port": ...,
+    "port": "...",
     "database": "...",
 }
 
 # Selected course id
-course_ids = (0,4)
+course_ids = (0,4,5,6)
 
 # Connection with Neo4j and SQL server
 graph = neo4j_connection(neo4j_settings)
+# Reset KG
+graph.clean_base()
 connection = moodle_connection(moodle_settings)
 cursor = connection.cursor()
 
@@ -181,6 +183,50 @@ for idx in tqdm(df.index):
     query = f"""MATCH (t:TEACHER {{user_id:{user_id}}})
                 MERGE (c:COURSE {{id:{course_id}, title:"{course_name}", description:"{course_description}"}})
                 MERGE (t)-[:CREATED]->(c)"""
+    graph.query(query)
+
+df.head(3)
+
+# %% [markdown]
+# For each course, correlate with learner which participate
+
+# %%
+query = f"""SELECT 
+            u.id AS id,
+            u.username AS username,
+            cse.id AS course_id
+        FROM 
+            mdl_user u
+        JOIN 
+            mdl_role_assignments ra ON u.id = ra.userid
+        JOIN 
+            mdl_context c ON ra.contextid = c.id
+        JOIN 
+            mdl_role r ON ra.roleid = r.id
+        JOIN 
+            mdl_course cse ON c.instanceid = cse.id AND c.contextlevel = 50
+        WHERE
+            r.shortname = 'student' AND u.confirmed = 1 AND cse.id IN {course_ids}
+        ORDER BY
+            cse.id, u.id"""
+
+# Fetch records
+rows, cursor = retrieve_data_from_MOODLE(query=query, moodle_settings=moodle_settings, cursor=cursor)
+# Convert records to DataFrame
+df = pd.DataFrame(
+    rows,
+    columns=["user_id", "username", "course_id"],
+)
+print("[INFO] Number of records: ", df.shape[0])
+
+for idx in tqdm(df.index):
+    course_id = df.loc[idx]["course_id"]
+    user_id = df.loc[idx]["user_id"]
+    username = df.loc[idx]["username"]
+
+    query = f"""MATCH (l:LEARNER {{user_id:{user_id}}})
+                MATCH (c:COURSE {{id:{course_id}}})
+                MERGE (l)-[:REGISTERED]->(c)"""
     graph.query(query)
 
 df.head(3)
@@ -375,7 +421,7 @@ for idx in tqdm(df.index):
 
     query = f"""MATCH (a:ACTIVITY)
                 WHERE a.id = "Forum:{forum_id}"
-                SET a.forum_type = "{forum_type}", a.title = "{forum_name}", a.description = "{forum_intro}"
+                SET a.forum_type = "{forum_type}", a.title = "{forum_name}", a.description = "{forum_intro}", a.metric = "Basic skills", a.rubric = "{{}}"
              """
 
     graph.query(query)
@@ -448,7 +494,7 @@ for idx in tqdm(df.index):
             WHERE l.user_id={user_id}
             MATCH (a:ACTIVITY) 
             WHERE a.id="Forum:{forum_id}"
-            MERGE (l)-[:PARTICIPATE {{number_of_posts:{number_of_posts}, grade:{user_grade}, time:{time}}}]->(a)"""
+            MERGE (l)-[:PARTICIPATE {{number_of_posts:{number_of_posts}, grade:round({user_grade},1), time:{time}}}]->(a)"""
     graph.query(query)
 
 df.head(3)
@@ -485,7 +531,7 @@ for idx in tqdm(df.index):
 
     query = f"""MATCH (a:ACTIVITY)
                 WHERE a.id = "Quiz:{quiz_id}"
-                SET a.title = "{quiz_name}", a.description = "{quiz_intro}", a.quiz_max_grade = {quiz_max_grade}
+                SET a.title = "{quiz_name}", a.description = "{quiz_intro}", a.quiz_max_grade = {quiz_max_grade}, a.metric = "Quiz", a.rubric = "{{}}"
              """
 
     graph.query(query)
@@ -531,13 +577,13 @@ for idx in tqdm(df.index):
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Quiz:{quiz_id}"
-                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, grade:100*{user_grade}/a.quiz_max_grade}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, grade:round(100*{user_grade}/a.quiz_max_grade,1)}}]->(a)"""
     else:
         query = f"""MATCH (l:LEARNER) 
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Quiz:{quiz_id}"
-                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, time:{total_time}, grade:100*{user_grade}/a.quiz_max_grade}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, time:{total_time}, grade:round(100*{user_grade}/a.quiz_max_grade,1)}}]->(a)"""
     graph.query(query)
 
 df.head(3)
@@ -578,7 +624,7 @@ for idx in tqdm(df.index):
 
     query = f"""MATCH (a:ACTIVITY)
                 WHERE a.id = "Assign:{assign_id}"
-                SET a.title = "{assign_name}", a.description = "{assign_intro}", a.assign_max_grade = {assign_max_grade}
+                SET a.title = "{assign_name}", a.description = "{assign_intro}", a.assign_max_grade = {assign_max_grade}, a.metric = "Basic skills", a.rubric = "{{}}"
              """
 
     graph.query(query)
@@ -627,13 +673,13 @@ for idx in tqdm(df.index):
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Assign:{assign_id}"
-                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, grade:100.0*{user_grade}/a.assign_max_grade}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, grade:round(100.0*{user_grade}/a.assign_max_grade,1)}}]->(a)"""
     else:
         query = f"""MATCH (l:LEARNER) 
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Assign:{assign_id}"
-                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, time:{total_time}, grade:100.0*{user_grade}/a.assign_max_grade}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, time:{total_time}, grade:round(100.0*{user_grade}/a.assign_max_grade,1)}}]->(a)"""
     r = graph.query(query)
 
 df.head(3)
@@ -668,7 +714,7 @@ for idx in tqdm(df.index):
 
     query = f"""MATCH (a:ACTIVITY)
                 WHERE a.id = "Scorm:{scorm_id}"
-                SET a.title = "{scorm_name}", a.description = "{scorm_intro}"
+                SET a.title = "{scorm_name}", a.description = "{scorm_intro}", a.metric = "Basic skills", a.rubric = "{{}}"
              """
 
     graph.query(query)
@@ -716,7 +762,7 @@ for idx in tqdm(df.index):
                 WHERE l.user_id={user_id}
                 MATCH (a:ACTIVITY) 
                 WHERE a.id="Scorm:{scorm_id}"
-                MERGE (l)-[:PARTICIPATE {{grade:{user_grade}, attempts:{attempts}, time:{time}}}]->(a)"""
+                MERGE (l)-[:PARTICIPATE {{grade:round({user_grade},1), attempts:{attempts}, time:{time}}}]->(a)"""
     r = graph.query(query)
 
 df.head(4)
@@ -1479,5 +1525,3 @@ if connection.is_connected():
     cursor.close()
     connection.close()
     print("[INFO] MySQL connection is closed")
-
-

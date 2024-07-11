@@ -1,5 +1,4 @@
 from neo4j import GraphDatabase
-from utils.logger import logging
 
 class Neo4jConnection:
 
@@ -47,9 +46,9 @@ class Neo4jConnection:
 
         try:
             self.__driver = GraphDatabase.driver(self.__uri, auth=(self.__user, self.__pwd))
-            logging.info('Connection established')
+            print('[INFO] Connection established')
         except Exception as e:
-            logging.error("Failed to create the driver:", e)
+            print("Failed to create the driver:", e)
 
     def close(self)->None:
         '''
@@ -82,8 +81,8 @@ class Neo4jConnection:
         except Exception as e:
             print(f'[ERROR] Query failed: {e}"')
             print(f'Query: {query}')
-            logging.error(f"Query failed: {e}")
-            logging.error(f'Query: {query}')
+            print(f"Query failed: {e}")
+            print(f'Query: {query}')
         finally: 
             if session is not None:
                 session.close()
@@ -94,7 +93,7 @@ class Neo4jConnection:
             Remove all nodes/relationships from the database
         '''
         self.query("MATCH (n) DETACH DELETE n")
-        logging.info('All items of DB were deleted')
+        print('All items of DB were deleted')
 
 
     def get_schema(self)->str:
@@ -156,5 +155,6 @@ def neo4j_connection(neo4j_settings: dict = None, clean_graph: bool = True):
         
         return graph
     except Exception as e:
-        print("Error while connecting to Neo4j", e)
+        print("[ERROR] Connection with Neo4j was not established")
+        print("> ", e)
         raise e

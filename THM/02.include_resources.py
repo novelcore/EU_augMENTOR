@@ -1,12 +1,13 @@
+import os
 import json
 from utils.neo4j_connection import Neo4jConnection
 from utils.google_search import search_videos, search_tutorials
 
 # Neo4j local
 neo4j_settings = {
-    "connection_url": "...",
-    "username": "...",
-    "password": "...",
+    "connection_url": "bolt://localhost:7687",
+    "username": "neo4j",
+    "password": "augmentor2024",
 }
 
 # Create Graph-Database in Neo4j
@@ -56,15 +57,15 @@ for item in response:
         continue 
     
     try:
-        videos = search_videos(query=description, numuber_of_results=5)
+        videos = search_videos(query=description, number_of_results=5)
         print("[INFO] Videos retrieved")
-        tutorials = search_tutorials(query=description, numuber_of_results=5)    
+        tutorials = search_tutorials(query=description, number_of_results=5)    
         print("[INFO] Tutorials retrieved")
-        # documents = search_documents(query=description, numuber_of_results=5)
+        # documents = search_documents(query=description, number_of_results=5)
         # print("[INFO] Documents retrieved")
         # articles = search_articles(query=description)
         # print("[INFO] Articles retrieved")
-        # papers = search_google_scholar(query=description, numuber_of_results=5)
+        # papers = search_google_scholar(query=description, number_of_results=5)
         # print("[INFO] Research papers retrieved")
         print()
     except Exception as e:
@@ -102,12 +103,12 @@ for item in response:
 print('[INFO] Resources for all rooms where retrieved')
 with open(resources_file, 'w', encoding = "utf8") as file:
     json.dump(d, file, ensure_ascii = False, separators = (',', ':'))
-
+print(f"[INFO] Resources were saved in file: {resources_file}")
 
 
 # %%
 print('[INFO] Import resources data to Knowledge Graph')
-for code, resources_videos, resouces_tutorials in tqdm(zip(d['code'], d['videos'], d['tutorials'])):
+for code, resources_videos, resouces_tutorials in zip(d['code'], d['videos'], d['tutorials']):
     try:
         # Preprocess
         resources_videos = resources_videos.replace('"',"'")

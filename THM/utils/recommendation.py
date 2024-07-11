@@ -2,10 +2,10 @@ import os
 import ast
 import json
 from langchain.schema.document import Document
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.graphs import Neo4jGraph
 from langchain.chains.llm import LLMChain
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains.graph_qa.cypher import construct_schema, extract_cypher
 from langchain.chains.graph_qa.cypher_utils import Schema, CypherQueryCorrector
@@ -107,7 +107,7 @@ class Recommendations:
             docs = [Document(page_content=recommendations[i]["question"], metadata={"index": i, "user":recommendations[i]["user"], "instructions": recommendations[i]["instructions"]}) for i in recommendations]
             self._recommendations_db = FAISS.from_documents(docs, embeddings)
             # Save index
-            self._recommendations_db_path = 'Data/recommendations_db'
+            self._recommendations_db_path = 'Resources/recommendations_db'
             self._recommendations_db.save_local(self._recommendations_db_path)
         else:
             print('[INFO] Loading recommendation DB')
@@ -123,7 +123,7 @@ class Recommendations:
             room_descriptions = [Document(page_content=item["description"], metadata={"index": i, "code":item["code"]}) for i, item in enumerate(response)]
             self._room_descriptions_db = FAISS.from_documents(room_descriptions, embeddings)
             # Save index
-            self._room_descriptions_db_path = 'Data/room_descriptions_db'
+            self._room_descriptions_db_path = 'Resources/room_descriptions_db'
             self._room_descriptions_db.save_local(self._room_descriptions_db_path)        
         else:
             print('[INFO] Loading room-description DB')

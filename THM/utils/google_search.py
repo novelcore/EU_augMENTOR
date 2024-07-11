@@ -5,19 +5,19 @@ from bs4 import BeautifulSoup
 
 # Videos
 # ----------------------------------------------------------------
-def search_videos(query, numuber_of_results=5):
+def search_videos(query, number_of_results=5):
     """
     Search for videos related to a query on YouTube.
 
     Args:
         query (str): The search query.
-        numuber_of_results (int): Number of videos to retrieve. Default is 5.
+        number_of_results (int): Number of videos to retrieve. Default is 5.
 
     Returns:
         list: A list of dictionaries containing the title and URL of each video.
     """
     search_query = query + " site:youtube.com"
-    search_results = search(search_query, stop=numuber_of_results)
+    search_results = search(search_query, stop=number_of_results)
 
     videos = []
     for result in search_results:
@@ -51,19 +51,19 @@ def get_video_title(video_url):
 
 # Documents
 # ----------------------------------------------------------------
-def search_documents(query, numuber_of_results=5):
+def search_documents(query, number_of_results=5):
     """
     Search for documents (PDFs, DOC, DOCX) related to a query.
 
     Args:
         query (str): The search query.
-        numuber_of_results (int): Number of documents to retrieve. Default is 5.
+        number_of_results (int): Number of documents to retrieve. Default is 5.
 
     Returns:
         list: A list of dictionaries containing the title and URL of each document.
     """    
     search_query = query + " filetype:pdf OR filetype:doc OR filetype:docx"
-    search_results = search(search_query, stop=numuber_of_results)
+    search_results = search(search_query, stop=number_of_results)
 
     documents = []
     for result in search_results:
@@ -80,19 +80,19 @@ def search_documents(query, numuber_of_results=5):
 
 # Articles
 # ----------------------------------------------------------------
-def search_articles(query, numuber_of_results=5):
+def search_articles(query, number_of_results=5):
     """
     Search for articles or blog posts related to a query.
 
     Args:
         query (str): The search query.
-        numuber_of_results (int): Number of articles to retrieve. Default is 5.
+        number_of_results (int): Number of articles to retrieve. Default is 5.
 
     Returns:
         list: A list of dictionaries containing the title, URL, and content of each article.
     """
     search_query = query + " site:.com OR site:.org OR site:.net"  # Restrict search to common article/blog domains
-    search_results = search(search_query, stop=numuber_of_results)
+    search_results = search(search_query, stop=number_of_results)
 
     articles = []
     for result in search_results:
@@ -129,19 +129,19 @@ def extract_article_info(url):
 
 # Tutorials
 # ----------------------------------------------------------------
-def search_tutorials(query, numuber_of_results=5):
+def search_tutorials(query, number_of_results=5):
     """
     Search for tutorials or guides related to a query.
 
     Args:
         query (str): The search query.
-        numuber_of_results (int): Number of tutorials to retrieve. Default is 5.
+        number_of_results (int): Number of tutorials to retrieve. Default is 5.
 
     Returns:
         list: A list of dictionaries containing the title and URL of each tutorial.
     """
     search_query = query + " tutorial OR guide"
-    search_results = search(search_query, stop=numuber_of_results)
+    search_results = search(search_query, stop=number_of_results)
 
     tutorials = []
     for result in search_results:
@@ -157,18 +157,18 @@ def search_tutorials(query, numuber_of_results=5):
 
 # Research Papers
 # ----------------------------------------------------------------
-def search_google_scholar(query, numuber_of_results=5):
+def search_google_scholar(query, number_of_results=5):
     """
     Search for research papers related to a query on Google Scholar.
 
     Args:
         query (str): The search query.
-        numuber_of_results (int): Number of papers to retrieve. Default is 5.
+        number_of_results (int): Number of papers to retrieve. Default is 5.
 
     Returns:
         list: A list of dictionaries containing the title and link of each paper.
     """
-    url = f"https://scholar.google.com/scholar?q={query}&num={numuber_of_results}"
+    url = f"https://scholar.google.com/scholar?q={query}&num={number_of_results}"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
     results = []

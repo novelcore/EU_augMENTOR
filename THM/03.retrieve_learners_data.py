@@ -5,19 +5,11 @@ from utils.neo4j_connection import Neo4jConnection
 # Configuration
 headers = {"THM-API-KEY": "..."}
 
-# Neo4j local
 neo4j_settings = {
     "connection_url": "...",
     "username": "...",
     "password": "...",
 }
-
-# Create Graph-Database in Neo4j
-graph = Neo4jConnection(
-    uri=neo4j_settings["connection_url"],
-    user=neo4j_settings["username"],
-    pwd=neo4j_settings["password"],
-)
 
 # Create Graph-Database in Neo4j
 graph = Neo4jConnection(
@@ -120,7 +112,7 @@ for room_code in d_rooms:
                 MERGE (u)-[:PERFORMED {{score: {score}, correct: "{correct}", attempts: {attempts}}}]->(q)
                 """     
                 graph.query(query) 
-print("[INFO] Scoreboard has been imported")
+print("[INFO] Scoreboard has been imported in KG")
 
 # Calculate Module & Path percentage completeness
 

@@ -65,22 +65,17 @@ def retrieve_users(headers:dict={}):
             "totalPoints": item["totalPoint"],
             "monthlyPoints": item["monthlyPoints"],
         }
-    print('[INFO] Users\' basic descriptions were retrieved')        
+    print('[INFO] Learners\' basic descriptions were retrieved')        
 
 
     for username in d_users:
-        # # GET userID
-        # url = f"https://tryhackme.com/api/similar-users/{username}"
-        # data = retrieve_data(url=url, headers=headers)
-        # d_users[username]["userId"] = data[0]["userId"]
-        
         # GET completed Rooms
         url = f"https://tryhackme.com/api/all-completed-rooms?username={username}"
         data = retrieve_data(url=url, headers=headers)
         d_users[username]["completed_rooms"] = []
         for item in data:
             d_users[username]["completed_rooms"].append(item["code"])
-    print('[INFO] Users\' IDs and completed rooms were retrieved')        
+    print('[INFO] Learners\' IDs and completed rooms were retrieved')        
             
     return d_users
 

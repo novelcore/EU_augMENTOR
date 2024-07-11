@@ -70,6 +70,7 @@ Project duration: 36 months
 **Step 3.** Install requirements 
 ```
     pip install -r requirements.txt
+    pip install -U langchain-openai
 ```
 
 ### Use case: TryHackMe (THM)
