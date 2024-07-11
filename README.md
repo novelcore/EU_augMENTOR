@@ -2,7 +2,7 @@
 
 This repository contains the implementation of EU project: augMENTOR
 
-**Abstract: ** AUGMENTOR aims to develop a novel pedagogical framework that promotes both basic skills and 21st century competencies by
+**Abstract:** AUGMENTOR aims to develop a novel pedagogical framework that promotes both basic skills and 21st century competencies by
 integrating emerging technologies. This framework will be supported by an open access AI-boosted toolkit that builds on the strengths
 of big data and learning analytics to provide different types of stakeholders with explainable recommendations for smart search and
 identification of educational resources, as well as for designing personalized learning profiles that take into account individual actors’
