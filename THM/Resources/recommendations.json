@@ -1,0 +1,22 @@
+{
+    "1": {
+        "question": "Give the scores of each Learner at each room",
+        "user": "learner",
+        "instructions": "- Recommend learner {username} the necessity to study the resources that have not studied.\n- Recommend the learner {username} to study hard and devote more time to the learning material for improvinge its grades.\n- Recommend the learner {username} to discuss with his colleagues in forum for each difficulty is facing.\n- Provide only recommendations about Learner {username}.\n- Mention nothing about other learners in your answer.\n- Reply in a formal message form. Conclude the reply as \nKind regards,\n{name}\n{title}"
+    },
+    "2": {
+        "question": "Give the scores of each Learner",
+        "user": "learner",
+        "instructions": "- Recommend the learner {username} the necessity to study the resources that have not studied.\n- Recommend the learner {username} to study hard and devote more time to the learning material for improvinge its grades.\n- Recommend the learner {username} to discuss with his colleagues in forum for each difficulty is facing.\n- Provide only recommendations about Learner {username}.\n- Mention nothing about other learners in your answer.\n- Reply in a formal message form. Conclude the reply as \nKind regards,\n{name}\n{title}"
+    },    
+    "3": {
+        "question": "Give the scores of each Learner with username 'trooper'",
+        "user": "learner",
+        "instructions": "- Recommend the learner {username} the necessity to study the resources that have not studied.\n- Recommend the learner {username} to study hard and devote more time to the learning material for improvinge its grades.\n- Recommend the learner {username} to discuss with his colleagues in forum for each difficulty is facing.\n- Provide only recommendations about Learner {username}.\n- Mention nothing about other learners in your answer.\n- Reply in a formal message form. Conclude the reply as \nKind regards,\n{name}\n{title}"
+    },
+    "4": {
+        "question": "Give the the profile of learner with username trooper and an explanation",
+        "user": "learner",
+        "instructions": "- High the learner the profiles that belongs along with the explanation.\n- Recommend the learner {username} to study hard and devote more time to the learning material for improvinge its grades.\n- Recommend the learner {username} to discuss with his colleagues in forum for each difficulty is facing.\n- Provide only recommendations about Learner {username}.\n- Reply in a formal message form. Conclude the reply as \nKind regards,\n{name}\n{title}"    
+    }    
+}
