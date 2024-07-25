@@ -22,12 +22,10 @@ moodle_settings = {
 }
 
 # Selected course id
-course_ids = (0,4,5,6)
+course_ids = (4,5,6)
 
 # Connection with Neo4j and SQL server
-graph = neo4j_connection(neo4j_settings)
-# Reset KG
-graph.clean_base()
+graph = neo4j_connection(neo4j_settings=neo4j_settings, clean_graph=True)
 connection = moodle_connection(moodle_settings)
 cursor = connection.cursor()
 
@@ -96,8 +94,7 @@ for idx in tqdm(df.index):
         graph.query(
             f"""MERGE (t:TEACHER {{user_id:{id}, username:"{username}", institution:"{institution}", country:"{country}"}})"""
         )
-
-df.head(3)
+print("[INFO] Learners and Teachers imported")
 
 # %% [markdown]
 # ### Courses and Modules
@@ -185,7 +182,7 @@ for idx in tqdm(df.index):
                 MERGE (t)-[:CREATED]->(c)"""
     graph.query(query)
 
-df.head(3)
+print("[INFO] Teacher were assigned to their created courses")
 
 # %% [markdown]
 # For each course, correlate with learner which participate
@@ -229,7 +226,7 @@ for idx in tqdm(df.index):
                 MERGE (l)-[:REGISTERED]->(c)"""
     graph.query(query)
 
-df.head(3)
+print("[INFO] Learners were correlated to their courses")
 
 # %% [markdown]
 # For each course create each modules
@@ -258,11 +255,12 @@ for course_id in course_ids:
     )
     # Processing
     df = df.drop('sequence', axis=1).drop_duplicates()
-    print("[INFO] Number of records: ", df.shape[0])
+    df['section_name'] += 1
+    print(f"[INFO] Course Id: {course_id:.0f} | Number of records: ", df.shape[0])
 
     for idx in tqdm(df.index):
         section_id = df.loc[idx]["section_id"]
-        section_name = f"MODULE: {df.loc[idx]['section_name']}"
+        section_name = f"MODULE:{df.loc[idx]['section_name']}"
         course_id = df.loc[idx]["course_id"]
 
         query = f"""MATCH (c:COURSE)
@@ -272,7 +270,7 @@ for course_id in course_ids:
 
         graph.query(query)
 
-df.head(3)
+print("[INFO] Modules of each course were created")  
 
 # %% [markdown]
 # ### Activities
@@ -387,7 +385,7 @@ for course_id in course_ids:
 
         graph.query(query)
 
-df.head(3)
+print("[INFO] Activities of each Module were created")
 
 # %% [markdown]
 # #### Activity: FORUM
@@ -423,8 +421,9 @@ for idx in tqdm(df.index):
                 WHERE a.id = "Forum:{forum_id}"
                 SET a.forum_type = "{forum_type}", a.title = "{forum_name}", a.description = "{forum_intro}", a.metric = "Basic skills", a.rubric = "{{}}"
              """
-
     graph.query(query)
+
+print("[INFO] FORUM properties were updated")
 
 # %%
 # # In 2nd round maybe information about forum discussion should be included (such as title, user who created, )
@@ -449,15 +448,49 @@ for idx in tqdm(df.index):
 
 # # Create a pandas DataFrame
 # df = pd.DataFrame(rows, columns=[desc[0] for desc in cursor.description])
+# df
 
 # %%
+# query = f"""SELECT 
+#     p.userid AS user_id,
+#     f.id AS forum_id,
+#     f.course AS course_id,
+#     COUNT(p.id) AS number_of_posts,
+#     fg.grade AS user_grade,
+#     (MAX(l.timecreated) - MIN(l.timecreated)) AS time_to_complete
+# FROM 
+#     mdl_forum_posts p
+# JOIN 
+#     mdl_forum_discussions d ON p.discussion = d.id
+# JOIN 
+#     mdl_forum f ON d.forum = f.id
+# LEFT JOIN 
+#     mdl_forum_grades fg ON f.id = fg.forum AND p.userid = fg.userid
+# JOIN 
+#     mdl_logstore_standard_log l ON l.objectid = p.id AND l.userid = p.userid
+# WHERE
+#     f.course IN {course_ids}
+#     AND l.component = 'mod_forum'
+#     AND l.action IN ('created', 'viewed') -- actions indicating activity in the forum
+# GROUP BY 
+#     p.userid, f.id, fg.grade;
+# """
+
 query = f"""SELECT 
     p.userid AS user_id,
     f.id AS forum_id,
     f.course AS course_id,
+    GROUP_CONCAT(DISTINCT l.action ORDER BY l.action ASC) AS actions, -- List of distinct actions            
+    SUM(CASE WHEN l.action = 'submitted' THEN 1 ELSE 0 END) AS number_of_submissions,
     COUNT(p.id) AS number_of_posts,
     fg.grade AS user_grade,
-    (MAX(l.timecreated) - MIN(l.timecreated)) AS time_to_complete
+    (MAX(l.timecreated) - MIN(l.timecreated)) AS time_to_complete,
+    COUNT(l.id) AS number_of_clicks,
+    MIN(p.created) AS first_post_timestamp,
+    MAX(p.created) AS last_post_timestamp,
+    COUNT(DISTINCT d.id) AS number_of_discussions,
+    (MAX(p.created) - MIN(p.created)) / NULLIF(COUNT(p.id) - 1, 0) AS avg_time_between_posts,
+    COUNT(DISTINCT DATE(FROM_UNIXTIME(p.created))) AS active_days
 FROM 
     mdl_forum_posts p
 JOIN 
@@ -467,37 +500,38 @@ JOIN
 LEFT JOIN 
     mdl_forum_grades fg ON f.id = fg.forum AND p.userid = fg.userid
 JOIN 
-    mdl_logstore_standard_log l ON l.objectid = p.id AND l.userid = p.userid
+    mdl_logstore_standard_log l ON l.objectid = p.id AND l.userid = p.userid AND l.component = 'mod_forum'
 WHERE
     f.course IN {course_ids}
-    AND l.component = 'mod_forum'
-    AND l.action IN ('created', 'viewed') -- actions indicating activity in the forum
 GROUP BY 
-    p.userid, f.id, fg.grade;
-"""
+    p.userid, f.id, fg.grade;"""
+    
 # Fetch records
 rows, cursor = retrieve_data_from_MOODLE(query=query, moodle_settings=moodle_settings, cursor=cursor)
 # Convert records to DataFrame
 df = pd.DataFrame(rows, columns=[desc[0] for desc in cursor.description])
 print("[INFO] Number of records: ", df.shape[0])
 # Processing
-df["user_grade"] = df["user_grade"].apply(lambda x: 0 if x is None else x)
+df["user_grade"] = df["user_grade"].apply(lambda x: 0 if x is None else x) # TODO: Some records are empty
 
 for idx in tqdm(df.index):
     user_id = df.loc[idx]["user_id"]
     forum_id = df.loc[idx]["forum_id"]
+    number_of_submissions = df.loc[idx]["number_of_submissions"]
     number_of_posts = df.loc[idx]["number_of_posts"]
     user_grade = df.loc[idx]["user_grade"]
+    number_of_clicks = df.loc[idx]["number_of_clicks"]
+    number_of_discussions = df.loc[idx]["number_of_discussions"]
     time = df.loc[idx]['time_to_complete']
     
     query = f"""MATCH (l:LEARNER) 
             WHERE l.user_id={user_id}
             MATCH (a:ACTIVITY) 
             WHERE a.id="Forum:{forum_id}"
-            MERGE (l)-[:PARTICIPATE {{number_of_posts:{number_of_posts}, grade:round({user_grade},1), time:{time}}}]->(a)"""
+            MERGE (l)-[:PARTICIPATE {{number_of_posts:{number_of_posts}, grade:round({user_grade},1), number_of_submissions:{number_of_submissions}, number_of_clicks:{number_of_clicks}, number_of_discussions:{number_of_discussions}, time:{time}}}]->(a)"""
     graph.query(query)
 
-df.head(3)
+print("[INFO] Learners were assigned to FORUMs")
 
 # %% [markdown]
 # #### Activity: QUIZ
@@ -536,26 +570,54 @@ for idx in tqdm(df.index):
 
     graph.query(query)
 
-df.head(3)
+print("[INFO] QUIZ properties were updated")
 
 # %%
+# query = f"""SELECT 
+#     qa.userid AS user_id,
+#     q.id AS quiz_id,
+#     q.course AS course_id,
+#     COUNT(qa.id) AS number_of_attempts,
+#     SUM(qa.timefinish - qa.timestart) AS total_time,
+#     qg.grade AS user_grade
+# FROM 
+#     mdl_quiz q
+# JOIN 
+#     mdl_quiz_attempts qa ON q.id = qa.quiz
+# JOIN 
+#     mdl_quiz_grades qg ON q.id = qg.quiz AND qa.userid = qg.userid
+# WHERE
+#     q.course in {course_ids}
+# GROUP BY 
+#     qa.userid, q.id, qg.grade;"""
+
 query = f"""SELECT 
     qa.userid AS user_id,
     q.id AS quiz_id,
     q.course AS course_id,
+    GROUP_CONCAT(DISTINCT l.action ORDER BY l.action ASC) AS actions, -- List of distinct actions            
+    SUM(CASE WHEN l.action = 'submitted' THEN 1 ELSE 0 END) AS number_of_submissions,    
     COUNT(qa.id) AS number_of_attempts,
     SUM(qa.timefinish - qa.timestart) AS total_time,
-    qg.grade AS user_grade
+    qg.grade AS user_grade,
+    COUNT(l.id) AS number_of_clicks, -- Number of clicks    
+    MIN(qa.timestart) AS first_attempt_timestamp,
+    MAX(qa.timefinish) AS last_attempt_timestamp,
+    AVG(qa.timefinish - qa.timestart) AS avg_time_per_attempt,
+    COUNT(CASE WHEN qa.state = 'finished' THEN 1 END) AS number_of_completed_attempts
 FROM 
     mdl_quiz q
 JOIN 
     mdl_quiz_attempts qa ON q.id = qa.quiz
 JOIN 
     mdl_quiz_grades qg ON q.id = qg.quiz AND qa.userid = qg.userid
+LEFT JOIN 
+    mdl_logstore_standard_log l ON l.objectid = qa.id AND l.userid = qa.userid AND l.component = 'mod_quiz'
 WHERE
-    q.course in {course_ids}
+    q.course IN {course_ids}
 GROUP BY 
-    qa.userid, q.id, qg.grade;"""
+    qa.userid, q.id, qg.grade;
+"""
 
 # Fetch records
 rows, cursor = retrieve_data_from_MOODLE(query=query, moodle_settings=moodle_settings, cursor=cursor)
@@ -569,24 +631,27 @@ for idx in tqdm(df.index):
     user_id = df.loc[idx]["user_id"]
     quiz_id = df.loc[idx]["quiz_id"]
     number_of_attempts = df.loc[idx]["number_of_attempts"]
+    number_of_submissions = df.loc[idx]["number_of_submissions"]
     total_time = df.loc[idx]["total_time"]
     user_grade = df.loc[idx]["user_grade"]
+    number_of_clicks = df.loc[idx]["number_of_clicks"]
+    number_of_completed_attempts = df.loc[idx]["number_of_completed_attempts"]
 
     if total_time is None:
         query = f"""MATCH (l:LEARNER) 
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Quiz:{quiz_id}"
-                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, grade:round(100*{user_grade}/a.quiz_max_grade,1)}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, number_of_submissions:{number_of_submissions}, number_of_clicks:{number_of_clicks}, number_of_completed_attempts:{number_of_completed_attempts}, grade:round(100*{user_grade}/a.quiz_max_grade,1)}}]->(a)"""
     else:
         query = f"""MATCH (l:LEARNER) 
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Quiz:{quiz_id}"
-                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, time:{total_time}, grade:round(100*{user_grade}/a.quiz_max_grade,1)}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{attempts:{number_of_attempts}, number_of_submissions:{number_of_submissions}, number_of_clicks:{number_of_clicks}, number_of_completed_attempts:{number_of_completed_attempts}, time:{total_time}, grade:round(100*{user_grade}/a.quiz_max_grade,1)}}]->(a)"""
     graph.query(query)
 
-df.head(3)
+print("[INFO] Learners were assigned to QUIZs")
 
 # %% [markdown]
 # #### Activity: ASSIGN
@@ -629,27 +694,56 @@ for idx in tqdm(df.index):
 
     graph.query(query)
 
-df.head(3)
+print("[INFO] ASSIGN properties were updated")
 
 # %%
+# query = f"""SELECT 
+#     s.userid AS user_id,
+#     a.id AS assign_id,
+#     a.course AS course_id,
+#     CASE WHEN s.id IS NOT NULL THEN 1 ELSE 0 END AS submitted,
+#     SUM(s.timemodified - s.timecreated) AS total_time,
+#     g.grade AS user_grade
+# FROM 
+#     mdl_assign_submission s
+# JOIN 
+#     mdl_assign a ON s.assignment = a.id
+# LEFT JOIN 
+#     mdl_assign_grades g ON a.id = g.assignment AND s.userid = g.userid
+# WHERE
+#     a.course in {course_ids}
+# GROUP BY 
+#     s.userid, a.id, submitted, g.grade;"""
+
+
+
 query = f"""SELECT 
     s.userid AS user_id,
     a.id AS assign_id,
     a.course AS course_id,
+    GROUP_CONCAT(DISTINCT l.action ORDER BY l.action ASC) AS actions, -- List of distinct actions            
+    SUM(CASE WHEN l.action = 'submitted' THEN 1 ELSE 0 END) AS number_of_submissions,    
     CASE WHEN s.id IS NOT NULL THEN 1 ELSE 0 END AS submitted,
     SUM(s.timemodified - s.timecreated) AS total_time,
-    g.grade AS user_grade
+    g.grade AS user_grade,
+    COUNT(l.id) AS number_of_clicks,
+    MIN(s.timecreated) AS first_attempt_timestamp,
+    MAX(s.timemodified) AS last_attempt_timestamp
 FROM 
     mdl_assign_submission s
 JOIN 
     mdl_assign a ON s.assignment = a.id
 LEFT JOIN 
     mdl_assign_grades g ON a.id = g.assignment AND s.userid = g.userid
+LEFT JOIN 
+    mdl_logstore_standard_log l ON l.objectid = s.id AND l.userid = s.userid AND l.component = 'mod_assign'
 WHERE
-    a.course in {course_ids}
+    a.course IN {course_ids} AND l.action IN ('submitted', 'viewed', 'updated', 'graded', 'feedback')
 GROUP BY 
-    s.userid, a.id, submitted, g.grade;"""
+    s.userid, a.id, submitted, g.grade;
+"""
 
+    
 # Fetch records
 rows, cursor = retrieve_data_from_MOODLE(query=query, moodle_settings=moodle_settings, cursor=cursor)
 # Convert records to DataFrame
@@ -673,16 +767,16 @@ for idx in tqdm(df.index):
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Assign:{assign_id}"
-                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, grade:round(100.0*{user_grade}/a.assign_max_grade,1)}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, number_of_submissions: {number_of_submissions}, number_of_clicks: {number_of_clicks}, grade:round(100.0*{user_grade}/a.assign_max_grade,1)}}]->(a)"""
     else:
         query = f"""MATCH (l:LEARNER) 
                     WHERE l.user_id={user_id}
                     MATCH (a:ACTIVITY) 
                     WHERE a.id="Assign:{assign_id}"
-                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, time:{total_time}, grade:round(100.0*{user_grade}/a.assign_max_grade,1)}}]->(a)"""
+                    MERGE (l)-[:PARTICIPATE {{submitted:{submitted}, time:{total_time}, number_of_submissions: {number_of_submissions}, number_of_clicks: {number_of_clicks}, grade:round(100.0*{user_grade}/a.assign_max_grade,1)}}]->(a)"""
     r = graph.query(query)
 
-df.head(3)
+print("[INFO] Learners were assigned to ASSIGNs")
 
 # %% [markdown]
 # #### Activity: SCORM
@@ -719,23 +813,50 @@ for idx in tqdm(df.index):
 
     graph.query(query)
 
-
-df.head(3)
+print("[INFO] SCORM properties were updated")
 
 # %%
+# query = f"""SELECT 
+#     sg.userid AS user_id,
+#     s.id AS scorm_id,
+#     s.course AS course_id,
+#     MAX(CASE WHEN sg.element = 'cmi.core.score.raw' THEN sg.value ELSE NULL END) AS user_grade,
+#     COUNT(DISTINCT sg.attempt) AS num_attempts,
+#     MAX(CASE WHEN sg.element = 'cmi.core.total_time' THEN sg.value ELSE NULL END) AS total_time
+# FROM 
+#     mdl_scorm s
+# LEFT JOIN 
+#     mdl_scorm_scoes_track sg ON s.id = sg.scormid
+# WHERE 
+#     sg.element IN ('cmi.core.score.raw', 'cmi.core.total_time') AND s.course IN {course_ids}
+# GROUP BY 
+#     sg.userid, s.id
+# ORDER BY 
+#     sg.userid, s.id;
+# """
+
 query = f"""SELECT 
     sg.userid AS user_id,
     s.id AS scorm_id,
     s.course AS course_id,
     MAX(CASE WHEN sg.element = 'cmi.core.score.raw' THEN sg.value ELSE NULL END) AS user_grade,
+    GROUP_CONCAT(DISTINCT l.action ORDER BY l.action ASC) AS actions, -- List of distinct actions            
+    SUM(CASE WHEN l.action = 'submitted' THEN 1 ELSE 0 END) AS number_of_submissions,
     COUNT(DISTINCT sg.attempt) AS num_attempts,
-    MAX(CASE WHEN sg.element = 'cmi.core.total_time' THEN sg.value ELSE NULL END) AS total_time
+    MAX(CASE WHEN sg.element = 'cmi.core.total_time' THEN sg.value ELSE NULL END) AS total_time,
+    COUNT(l.id) AS number_of_clicks,
+    COUNT(sg.attempt) AS number_of_submissions,
+    MIN(sg.timemodified) AS first_attempt_timestamp,
+    MAX(sg.timemodified) AS last_attempt_timestamp
 FROM 
     mdl_scorm s
 LEFT JOIN 
     mdl_scorm_scoes_track sg ON s.id = sg.scormid
+LEFT JOIN 
+    mdl_logstore_standard_log l ON l.objectid = sg.id AND l.component = 'mod_scorm' AND l.action = 'attempt'
 WHERE 
-    sg.element IN ('cmi.core.score.raw', 'cmi.core.total_time') AND s.course IN {course_ids}
+    sg.element IN ('cmi.core.score.raw', 'cmi.core.total_time') 
+    AND s.course IN {course_ids}
 GROUP BY 
     sg.userid, s.id
 ORDER BY 
@@ -756,16 +877,18 @@ for idx in tqdm(df.index):
     scorm_id = df.loc[idx]["scorm_id"]
     user_grade = df.loc[idx]["user_grade"]
     attempts = df.loc[idx]["num_attempts"]
+    number_of_submissions = df.loc[idx]["number_of_submissions"]
+    number_of_clicks = df.loc[idx]["number_of_clicks"]
     time = df.loc[idx]["total_time"]
 
     query = f"""MATCH (l:LEARNER) 
                 WHERE l.user_id={user_id}
                 MATCH (a:ACTIVITY) 
                 WHERE a.id="Scorm:{scorm_id}"
-                MERGE (l)-[:PARTICIPATE {{grade:round({user_grade},1), attempts:{attempts}, time:{time}}}]->(a)"""
+                MERGE (l)-[:PARTICIPATE {{grade:round({user_grade},1), number_of_submissions: {number_of_submissions}, number_of_clicks: {number_of_clicks}, attempts:{attempts}, time:{time}}}]->(a)"""
     r = graph.query(query)
 
-df.head(4)
+print("[INFO] Learners were assigned to SCORMs")
 
 # %% [markdown]
 # ### Resources
@@ -874,7 +997,7 @@ for idx in tqdm (df.index):
     """
     graph.query(query)
 
-df.head(3)
+print("[INFO] Resource:URL were imported")
 
 # %%
 query = f"""SELECT DISTINCT
@@ -910,7 +1033,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-df.head(3)
+print("[INFO] Learners which studied the Resource:URL were mapped")
 
 # %% [markdown]
 # #### Page
@@ -1020,8 +1143,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-
-df.head(3)
+print("[INFO] Resource:PAGE were imported")
 
 # %%
 query = f"""SELECT DISTINCT
@@ -1058,7 +1180,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-df.head(3)
+print("[INFO] Learners which studied the Resources:PAGE were mapped")
 
 # %% [markdown]
 # #### Folder
@@ -1166,7 +1288,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-df.head(3)
+print("[INFO] Resource:FOLDER were imported")
 
 # %%
 query = f"""SELECT DISTINCT
@@ -1223,7 +1345,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-df.head(3)
+print("[INFO] Learners which studied the Resources:FOLDER were mapped")
 
 # %% [markdown]
 # #### Glossary
@@ -1331,8 +1453,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-
-df.head(3)
+print("[INFO] Resource:GLOSSARY were imported")
 
 # %%
 query = f"""SELECT DISTINCT
@@ -1369,8 +1490,7 @@ for idx in tqdm(df.index):
     MERGE (l)-[:STUDY]-(r)
     """
     graph.query(query)
-
-df.head(3)
+print("[INFO] Learners which studied the Resources:GLOSSARY were mapped")
 
 # %% [markdown]
 # #### H5P
@@ -1479,8 +1599,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-
-df.head(3)
+print("[INFO] Resource:H5P were imported")
 
 # %%
 query = f"""SELECT DISTINCT
@@ -1518,7 +1637,7 @@ for idx in tqdm(df.index):
     """
     graph.query(query)
 
-df.head(3)
+print("[INFO] Learners which studied the Resources:H5P were mapped")
 
 # %%
 if connection.is_connected():
