@@ -213,12 +213,16 @@ This is the ontology used for developing the KG
 
 - Relation: PARTICIPATE
 
-    - Description: Connects a LEARNER node to an ACTIVITY node. Represents the relationship that a learner is participating in an activity.
+    - Description: Connects a LEARNER node to an ACTIVITY (FORUM, QUIZ, ASSIGN, SCORM) node. Represents the relationship that a learner is participating in an activity.
     - Properties:
         - grade (FLOAT): The grade received by the learner in the activity.
-        - time (INTEGER): The time spent by the learner on the activity.     - attempts (INTEGER): The number of attempts made by the learner in the activity.
+        - time (INTEGER): The time spent by the learner on the activity.     
+        - number_of_attempts (INTEGER): The number of attempts made by the learner in a quiz activity.
+        - - number_of_completed_attempts (INTEGER): The number of completed attempts made by the learner in a quiz/scorm activity.
         - number_of_posts (INTEGER): The number of posts made by the learner in a forum activity.
-        - submitted (INTEGER): Indicates whether the learner has submitted the activity (1 for yes, 0 for no).
+        - number_of_clicks (INTEGER): Indicates the number of clicks each learner conducted for an activity
+        - number_of_discussions (INTEGER): Indicates the number of discussion each learner created in a forum activity.
+        - number_of_submissions (INTEGER): Indicates the number of submissions each learner conducted for an activity
 
 - Relation: HAS_MODULE
 
