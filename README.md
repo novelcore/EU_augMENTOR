@@ -196,8 +196,8 @@ This is the ontology used for developing the KG
 
 #### Relationships and Their Properties
 
-- Relation: CREATE
-    - Description: Connects a TEACHER node to a COURSE node. Represents the relationship that a teacher has created a course.
+- Relation: ASSIGNED
+    - Description: Connects a TEACHER node to a COURSE node. Represents the relationship that a teacher has been assigned to a course.
     - Properties: None
 
 - Relation: STUDY
