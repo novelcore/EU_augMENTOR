@@ -128,122 +128,83 @@ This is the ontology used for developing the KG
 <img src=".\images\Moodle.png" width = "1000" alt="" align=center />
 </p>
 
-
 #### Nodes and Their Properties
 
-- TEACHER
+- ROOM
+    - difficulty (STRING): Level of difficulty for the content in the room (e.g., easy, medium, hard).
+    - timeToComplete (STRING): Estimated time required to complete the room's content.
+    - title (STRING): The title of the room.
+    - ID (STRING): Unique identifier for the room.
+    - description (STRING): Detailed description of the room.
+    - type (STRING): The type or category of the room.
+    - code (STRING): Any specific code associated with the room, possibly for access or reference.
+    - metric (STRING): One of 'Critical thinking' and 'Communication'
 
-    - username (STRING): The username of the teacher.
-    - country (STRING): The country where the teacher is located.
-    - institution (STRING): The institution the teacher is affiliated with.
-    - user_id (INTEGER): A unique identifier for the teacher.
+- TUTORIAL
+    - tutorials (STRING): URLs or identifiers for tutorials available for rooms.
 
-- LEARNER
+- VIDEO
+    - videos (STRING): URLs or identifiers for video content available for rooms.
 
-    - username (STRING): The username of the learner.
-    - country (STRING): The country where the learner is located.
-    - institution (STRING): The institution the learner is affiliated with.
-    - user_id (INTEGER): A unique identifier for the learner.
+- TASK
 
-- COURSE
+    - ID (STRING): Unique identifier for the task.
 
-    - description (STRING): A description of the course.
-    - title (STRING): The title of the course.
-    - id (INTEGER): A unique identifier for the course.
+- QUESTION
+    - questionNo (STRING): The number or identifier of the question within a task.
+    - answer (STRING): The correct answer to the question.
+    - extraPoints (STRING): Any additional points that can be earned by answering the question.
+    - hint (STRING): Hints or tips to help solve the question.
+    - question (STRING): The text of the question itself.
 
 - MODULE
-
     - title (STRING): The title of the module.
-    - id (INTEGER): A unique identifier for the module.
+    - moduleURL (STRING): URL linking to the module's content.
+    - summary (STRING): A brief summary of the module.
 
-- ASSIGN
-
-    - description (STRING): A description of the activity.
-    - id (STRING): A unique identifier for the activity.
-    - title (STRING): The title of the activity.
-    - rubrics (STRING): Rubrics of the activity
-
-- SCORM
-
-    - description (STRING): A description of the activity.
-    - id (STRING): A unique identifier for the activity.
-    - title (STRING): The title of the activity.
-    - rubrics (STRING): Rubrics of the activity
-
-- FORUM
-
-    - description (STRING): A description of the activity.
-    - id (STRING): A unique identifier for the activity.
-    - title (STRING): The title of the activity.
-    - forum_type (STRING): The type of forum (e.g., general, Q&A).
-    - rubrics (STRING): Rubrics of the activity
-
-- QUIZ
-
-    - description (STRING): A description of the activity.
-    - id (STRING): A unique identifier for the activity.
-    - title (STRING): The title of the activity.
-    - quiz_max_grade (INTEGER): The maximum grade achievable in a quiz activity.
-    - rubrics (STRING): Rubrics of the activity
-
-- RESOURCE
-
-    - description (STRING): A description of the resource.
-    - id (STRING): A unique identifier for the resource.
+- PATH
+    - title (STRING): The title of the path.
+    - difficulty (STRING): Overall difficulty level of the path.
+    - summary (STRING): A brief summary of the path.
+    - intro (STRING): An introduction to the path.
+    - code (STRING): Specific code associated with the path, possibly for access or reference.
 
 - PROFILES
     - profile_name (STRING): profile name
 
-#### Relationships and Their Properties
+#### Relationships and their Properties
 
-- Relation: ASSIGNED
-    - Description: Connects a TEACHER node to a COURSE node. Represents the relationship that a teacher has been assigned to a course.
-    - Properties: None
+- Relation: HAS_TASK
+    - Description: Connects ROOM nodes to TASK nodes.
+    - Meaning: Indicates that a specific room contains a certain task.
+    - Properties: None specified for this relationship.
 
-- Relation: STUDY
+- Relation: HAS_QUESTION
+    - Description: Connects TASK nodes to QUESTION nodes.
+    - Meaning: Indicates that a specific task contains a certain question.
+    - Properties: None specified for this relationship.
 
-    - Description: Connects a LEARNER node to a RESOURCE node.
-    - Represents the relationship that a learner is studying or using a resource.
-    - Properties: None
-
-- Relation: REGISTERED
-
-    - Description: Connects a LEARNER node to a COURSE node. Represents the relationship that a learner has registered for a course.
-    - Properties: None
-
-- Relation: PARTICIPATE
-
-    - Description: Connects a LEARNER node to an ACTIVITY (FORUM, QUIZ, ASSIGN, SCORM) node. Represents the relationship that a learner is participating in an activity.
-    - Properties:
-        - grade (FLOAT): The grade received by the learner in the activity.
-        - time (INTEGER): The time spent by the learner on the activity.     
-        - number_of_attempts (INTEGER): The number of attempts made by the learner in a quiz activity.
-        - - number_of_completed_attempts (INTEGER): The number of completed attempts made by the learner in a quiz/scorm activity.
-        - number_of_posts (INTEGER): The number of posts made by the learner in a forum activity.
-        - number_of_clicks (INTEGER): Indicates the number of clicks each learner conducted for an activity
-        - number_of_discussions (INTEGER): Indicates the number of discussion each learner created in a forum activity.
-        - number_of_submissions (INTEGER): Indicates the number of submissions each learner conducted for an activity
-
-- Relation: HAS_MODULE
-
-    - Description: Connects a COURSE node to a MODULE node. Represents the relationship that a course contains one or more modules.
-    - Properties: None
+- Relation: HAS_ROOM
+    - Description: Connects MODULE nodes to ROOM nodes.
+    - Meaning: Indicates that a module includes or is associated with a particular room.
+    - Properties: 
+        - order (INTEGER): The order in which the rooms appear within the module.
 
 - Relation: BELONGS
     - Description: Connect the learner with the profile he/she belongs
     - Properties:
         - augMENTOR_profile_explanation (STRING): provide an explanation why a learner has been assign to a augMENTOR profile.
 
-- Relation: HAS_ACTIVITY
-
-    - Description: Connects a MODULE node to an ACTIVITY (SCORM, FORUM, ASSIGN, QUIZ) node. Represents the relationship that a module contains one or more activities.
-    - Properties: None
-
-- Relation: HAS_RESOURCE
-
-    - Description: Connects an ACTIVITY node to a RESOURCE node.
-    - Represents the relationship that an activity includes one or more resources.
-    - Properties: None
+- Relation: REGISTERED
+    - Description: Connect the learner with the rooms he/she registered
+    - Properties:
+        - score (INTEGER): The score achieved by the learner
+        
+- Relation: HAS_MODULE
+    - Description: Connects PATH nodes to MODULE nodes.
+    - Meaning: Indicates that a specific path includes a certain module.
+    - Properties: 
+        - order (INTEGER): The order in which the modules appear within the path.
 
 #### Summary
 
