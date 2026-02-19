@@ -292,6 +292,53 @@ This is the ontology used for developing the KG
 
 The ontology represents a structured framework for organizing educational content, particularly within Moodle. It defines different types of nodes (ROOM, TUTORIAL, VIDEO, TASK, QUESTION, MODULE, PATH) each with specific properties that describe their attributes. Relationships between these nodes indicate how they are connected and organized, with properties on some relationships specifying the sequence or order of the connections. This ontology provides a detailed blueprint for how educational content is structured and navigated, ensuring a coherent and logical flow of information for users.
 
+<br/>
+
+## Licences
+
+### Production Dependencies
+| Library | Version | License |
+|---------|---------|---------|
+| python | ^3.11 | PSF-2.0 |
+| httpx | ^0.25.0 | BSD-3-Clause |
+| fastapi | ^0.103.2 | MIT |
+| uvicorn | ^0.23.2 | BSD-3-Clause |
+| prometheus-client | ^0.17.1 | Apache-2.0 |
+| opentelemetry-distro | 0.40b0 | Apache-2.0 |
+| opentelemetry-instrumentation-fastapi | 0.40b0 | Apache-2.0 |
+| opentelemetry-instrumentation-logging | 0.40b0 | Apache-2.0 |
+| opentelemetry-exporter-otlp | 1.19.0 | Apache-2.0 |
+| pytz | ^2023.3.post1 | MIT |
+| python-dotenv | ^1.0.1 | BSD-3-Clause |
+| pyjwt | ^2.8.0 | MIT |
+| cryptography | ^42.0.1 | Apache-2.0 OR BSD-3-Clause |
+| rank-bm25 | ^0.2.2 | Apache-2.0 |
+| pyyaml | ^6.0.1 | MIT |
+| pandas | ^2.2.2 | BSD-3-Clause |
+| beautifulsoup4 | ^4.12.3 | MIT |
+| mysql | ^0.0.3 | MIT |
+| neo4j | ^5.22.0 | Apache-2.0 |
+| python-multipart | ^0.0.9 | Apache-2.0 |
+| langchain | 0.0.320 | MIT |
+| deep-translator | 1.11.4 | MIT |
+| faiss-cpu | 1.7.4 | MIT |
+| openai | 0.28.1 | Apache-2.0 |
+| tiktoken | 0.5.1 | MIT |
+| requests | ^2.32.3 | Apache-2.0 |
+| google | 3.0.0 | MIT |
+
+### Development Dependencies
+| Library | Version | License |
+|---------|---------|---------|
+| commitizen | ^2.42.1 | MIT |
+| pre-commit | ^3.1.1 | MIT |
+| pytest | ^7.2.1 | MIT |
+| pytest-asyncio | ^0.20.3 | Apache-2.0 |
+| flake8 | ^6.0.0 | MIT |
+
+<br/>
+
 ## Contact 
 
-Dimitris Charalambakis (dcharalampakis@novelcore.eu)
+Nikos Alimpertis (alimpertis@novelcore.eu)
+
