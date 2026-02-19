@@ -341,17 +341,18 @@ The ontology represents a structured framework for organizing educational conten
 
 ## License Summary
 ### Open Source Licenses Used:
-**MIT License**: 14 libraries (fastapi, pytz, pyjwt, pyyaml, beautifulsoup4, etc.)
-**Apache-2.0**: 11 libraries (prometheus-client, opentelemetry-*, rank-bm25, neo4j, etc.)
-**BSD-3-Clause**: 4 libraries (httpx, uvicorn, python-dotenv, pandas)
-**Dual Licensed**: 1 library (cryptography: Apache-2.0 OR BSD-3-Clause)
-**PSF-2.0**: 1 library (python)
+- **MIT License**: 14 libraries (fastapi, pytz, pyjwt, pyyaml, beautifulsoup4, etc.)
+- **Apache-2.0**: 11 libraries (prometheus-client, opentelemetry-*, rank-bm25, neo4j, etc.)
+- **BSD-3-Clause**: 4 libraries (httpx, uvicorn, python-dotenv, pandas)
+- **Dual Licensed**: 1 library (cryptography: Apache-2.0 OR BSD-3-Clause)
+- **PSF-2.0**: 1 library (python)
 
 <br/>
 
 ## Contact 
 
 Nikos Alimpertis (alimpertis@novelcore.eu)
+
 
 
 
