@@ -336,11 +336,11 @@ The ontology represents a structured framework for organizing educational conten
 | pytest-asyncio | ^0.20.3 | Apache-2.0 |
 | flake8 | ^6.0.0 | MIT |
 
-#### Build System Dependencies
+### Build System Dependencies
 **poetry-core** (no specific version specified) - MIT
 
-### License Summary
-#### Open Source Licenses Used:
+## License Summary
+### Open Source Licenses Used:
 **MIT License**: 14 libraries (fastapi, pytz, pyjwt, pyyaml, beautifulsoup4, etc.)
 **Apache-2.0**: 11 libraries (prometheus-client, opentelemetry-*, rank-bm25, neo4j, etc.)
 **BSD-3-Clause**: 4 libraries (httpx, uvicorn, python-dotenv, pandas)
@@ -352,5 +352,6 @@ The ontology represents a structured framework for organizing educational conten
 ## Contact 
 
 Nikos Alimpertis (alimpertis@novelcore.eu)
+
 
 
