@@ -347,11 +347,22 @@ The ontology represents a structured framework for organizing educational conten
 - **Dual Licensed**: 1 library (cryptography: Apache-2.0 OR BSD-3-Clause)
 - **PSF-2.0**: 1 library (python)
 
+## Repository License
+
+This repository is released under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+## Funding
+
+This work is part of the **augMENTOR project** (Grant Agreement No. **101061509**), funded by the European Union under the **Horizon Europe** programme.
+
+Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the granting authority. Neither the European Union nor the granting authority can be held responsible for them.
+
 <br/>
 
 ## Contact 
 
 Nikos Alimpertis (alimpertis@novelcore.eu)
+
 
 
 
